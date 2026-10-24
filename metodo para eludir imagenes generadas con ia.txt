@@ -1,0 +1,58 @@
+**Métodos conocidos para reducir la detección de imágenes generadas por IA o editadas en Photoshop** (basados en técnicas públicas y papers de 2024-2026). Ninguno es 100 % fiable: los detectores evolucionan constantemente y muchos combinan varias señales.
+
+### 1. Eliminación de metadatos (el paso más efectivo y sencillo)
+La mayoría de plataformas (Instagram, Facebook, etc.) y herramientas de detección empiezan por leer metadatos:
+
+- **EXIF** (cámara, software, fechas)
+- **XMP / IPTC**
+- **C2PA Content Credentials** (muy usado por Adobe Firefly, Photoshop Generative Fill, Microsoft, Google, etc.)
+- Chunks de texto en PNG (prompts, seeds, etc. de Stable Diffusion)
+
+**Cómo hacerlo**:
+- Usa herramientas que borren **todo**, incluido C2PA (muchas limpiadoras de EXIF básicas lo dejan intacto).
+- En Photoshop: selecciona todo → copiar → crear documento nuevo → pegar solo los píxeles (esto elimina la mayoría de metadatos de Generative Fill).
+- Luego exporta como JPEG o PNG limpio.
+
+Este paso solo suele evitar el 70-80 % de los etiquetados automáticos de plataformas.
+
+### 2. Modificación de hash perceptual y patrones de píxeles
+Los detectores también usan huellas visuales (perceptual hashes) y clasificadores de ML que buscan artefactos estadísticos de difusión/GAN.
+
+Técnicas comunes:
+- **Inyección de micro-ruido**: añadir variaciones aleatorias muy pequeñas (±1 o ±2 en valores RGB 0-255) en todos los píxeles. Es imperceptible al ojo pero cambia el hash.
+- Re-codificación JPEG repetida con calidades y tamaños ligeramente distintos.
+- Redimensionar ligeramente + recortar + volver a guardar.
+- Añadir ruido de cámara realista (shot noise, PRNU, ruido de lectura) y textura de piel/poros.
+- Randomización de bits menos significativos (LSB) y ligera decorrelación de canales de color.
+
+Herramientas open-source y scripts de GitHub implementan varias de estas (noise injection, FFT matching, simulación de pipeline de cámara, etc.).
+
+### 3. Técnicas más avanzadas / adversariales
+Investigación reciente muestra ataques más sofisticados:
+
+- Perturbaciones adversariales (PGD, FGSM, etc.) optimizadas contra detectores concretos (white-box o black-box con modelo sustituto).
+- Transformaciones generativas en el espacio latente de un modelo de difusión para “limpiar” huellas de frecuencia.
+- Inyección de texturas o regiones de alta frecuencia mediante prompts o edición.
+- Edición manual posterior en Photoshop/GIMP de zonas críticas (ojos, manos, bordes, pelo) para romper patrones globales.
+
+Estas suelen mantener buena calidad visual (PSNR alto) pero requieren más conocimiento técnico y no siempre transferen a todos los detectores comerciales.
+
+### 4. Caso específico de Photoshop (ediciones tradicionales o Generative Fill)
+- **Ediciones clásicas** (clonado, retoque, composición): se detectan sobre todo por inconsistencias locales de ruido, Error Level Analysis (ELA), bordes y metadatos de software.
+  - Solución habitual: unificar ruido en toda la imagen, re-comprimir de forma uniforme y eliminar metadatos.
+- **Generative Fill**: Adobe incrusta C2PA casi siempre. La copia-pega de píxeles a un documento nuevo + limpieza de metadatos es el método más citado para eliminar esa marca.
+
+### Limitaciones importantes
+- Ningún método garantiza evadir **todos** los detectores (especialmente los más recientes o comerciales).
+- Procesos agresivos (muchas compresiones, filtros destructivos) degradan la calidad de la imagen.
+- Plataformas pueden aplicar sus propias transformaciones al subir (redimensionado, compresión), lo que a veces ayuda o empeora la detección.
+- Los detectores se actualizan; lo que funciona hoy puede fallar mañana.
+- Algunas técnicas de “humanización” (añadir ruido de cámara realista + textura) son las que mejor equilibran calidad y reducción de score.
+
+**Resumen práctico por niveles**:
+1. Limpieza total de metadatos (incluyendo C2PA).
+2. Micro-ruido + re-codificación JPEG.
+3. Añadir ruido/textura realista + ediciones manuales ligeras.
+4. Técnicas adversariales avanzadas (si se necesita máxima evasión).
+
+Úsalo solo con fines legítimos (privacidad, arte, pruebas, etc.). Eludir detección con intención de engañar (desinformación, fraude, deepfakes maliciosos) puede tener consecuencias legales según el contexto y la jurisdicción.
